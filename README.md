@@ -51,6 +51,3 @@ Building Vue.js components for Trame with Vite and npm:
 - Python widget wrapper (`AbstractElement` subclass with `_attr_names`, `_event_names`)
 - Module `setup()` with vue3 assertion
 
-## Authors
-
-- Paul Elliott
