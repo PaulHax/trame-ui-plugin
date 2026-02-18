@@ -56,19 +56,65 @@ def _inject_scripts(self):
     )
 ```
 
+## Inline Module Dict (Simple Alternative)
+
+For a single JS file, skip the `module/` directory and use an inline dict:
+
+```python
+from pathlib import Path
+
+def _inject_scripts(self):
+    js_file = Path(__file__).with_name("my_utils.js").resolve()
+    self.server.enable_module(
+        dict(
+            serve={"my_code": str(js_file.parent)},
+            scripts=[f"my_code/{js_file.name}"],
+        )
+    )
+```
+
+## External ESM from CDN
+
+Load external ES modules without any local files:
+
+```python
+self.server.enable_module({"module_scripts": ["https://esm.sh/canvas-confetti@1.9.3"]})
+```
+
+## trame.utils Namespace Pattern
+
+Extend `window.trame.utils` so trame event handlers can access your code directly:
+
+```javascript
+window.trame.utils.my_code = {
+  actions: {
+    hello(name) { alert("Hello " + name); },
+    compute(x, y) { return x + y; },
+  },
+  rules: {
+    number(v) { return !isNaN(parseFloat(v)) || "Must be a number"; },
+  },
+};
+```
+
+Access in trame templates:
+```python
+click="utils.my_code.actions.hello('world')"
+rules=("utils.my_code.rules.number",)
+```
+
 ## IIFE Isolation Pattern
 
-Wrap all JS in an IIFE to avoid polluting globals:
+For larger JS with private state, wrap in an IIFE:
 
 ```javascript
 (function () {
-  // Private state — not visible outside
   let initialized = false;
   let myState = null;
 
   function helperFunction() { /* ... */ }
 
-  // Expose public API via trame.refs
+  // Expose public API via trame.refs (for js_call from Python)
   window.trame = window.trame || {};
   window.trame.refs = window.trame.refs || {};
   window.trame.refs.myController = {
@@ -76,7 +122,11 @@ Wrap all JS in an IIFE to avoid polluting globals:
     reset() { /* ... */ },
   };
 
-  // Expose lifecycle hooks as globals for VTK view callbacks
+  // Also expose via trame.utils (for event handler access)
+  window.trame.utils = window.trame.utils || {};
+  window.trame.utils.my_feature = { actions: { /* ... */ } };
+
+  // Lifecycle hooks as globals for VTK view callbacks
   window.initMyFeature = async function () {
     const vtkViewRef = window.trame?.refs?.["myVtkView"];
     if (!vtkViewRef) {
@@ -114,6 +164,16 @@ self.server.js_call("myController", "doSomething", arg1, arg2)
 ```
 
 This calls `window.trame.refs.myController.doSomething(arg1, arg2)`.
+
+## Accessing Browser Globals from Event Handlers
+
+Event handlers run in a sandbox where `window`, `document`, `fetch` are undefined. Use `utils.get()`:
+
+```python
+click="utils.get('fetch')(url).then(v => v.json()).then(v => (response = v))"
+click="utils.get('document').getElementById('myId').click()"
+click="utils.get('window').myGlobal()"
+```
 
 ## Reading Trame State from JS
 
