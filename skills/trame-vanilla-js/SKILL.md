@@ -33,7 +33,15 @@ def setup(server, **kwargs):
     pass
 ```
 
-The `serve` dict maps a URL prefix (`__my_feature`) to the local `serve/` directory. Scripts listed in `scripts` are auto-loaded by the client.
+The `serve` dict maps a URL prefix to the local `serve/` directory. The double-underscore prefix (`__my_feature`) is a convention for namespacing, not required. Scripts listed in `scripts` are loaded as `<script>` tags. Scripts load in parallel by default — if load order matters, use serial groups:
+```python
+scripts = [
+    ["__my_feature/dependency.js", {"serial": "my_group"}],
+    ["__my_feature/my_feature.js", {"serial": "my_group"}],
+]
+```
+
+There is also `module_scripts` for loading as `<script type="module">`, but `scripts` with IIFE is the standard Kitware pattern.
 
 ## Enabling the Module in Python
 
@@ -111,6 +119,9 @@ This calls `window.trame.refs.myController.doSomething(arg1, arg2)`.
 
 ```javascript
 const value = window.trame?.state?.get?.("my_state_var");
+
+// Watch for state changes:
+window.trame.state.watch(["my_var"], (my_var) => { /* react */ });
 ```
 
 ## VTK View Lifecycle Hooks

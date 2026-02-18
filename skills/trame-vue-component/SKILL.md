@@ -68,9 +68,9 @@ export default {
     emptyOutDir: false,
     cssCodeSplit: false,
     rollupOptions: {
-      external: [],
+      external: ["vue"],
       output: {
-        globals: {},
+        globals: { vue: "Vue" },
         assetFileNames: `${entryName}.[ext]`,
       },
     },
@@ -82,6 +82,7 @@ export default {
 
 Key settings:
 - `formats: ["umd"]` — produces a self-contained bundle that works via `<script>` tag
+- `external: ["vue"]` — **CRITICAL**: trame provides Vue globally as `window.Vue`. Bundling Vue into your UMD creates two Vue instances and components fail silently
 - `outDir: "../serve"` — builds directly into the trame serve directory
 - `emptyOutDir: false` — preserves other built files in serve/
 
@@ -142,6 +143,29 @@ styles = [
 def setup(server, **kwargs):
     pass
 ```
+
+## Vue Component Registration (vue_use)
+
+If your UMD exports a Vue plugin (with an `install` method), register it via `vue_use`:
+
+```python
+serve = {"__my_app": serve_path}
+scripts = ["__my_app/my_component.umd.js"]
+vue_use = ["my_component"]  # evals window.my_component, calls app.use()
+```
+
+Entry point with Vue plugin pattern:
+```javascript
+import MyWidget from "./MyWidget.vue";
+
+export function install(Vue) {
+  Vue.component("my-widget", MyWidget);
+}
+```
+
+The `vue_use` string is `window.eval()`'d — the name must match the Vite `lib.name`.
+
+For non-Vue-plugin UMDs (like vtk.js helpers), skip `vue_use` and use `window.trame.utils` namespace instead.
 
 ## Build and Serve
 
