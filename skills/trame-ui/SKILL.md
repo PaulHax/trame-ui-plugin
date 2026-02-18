@@ -1,6 +1,6 @@
 ---
 name: trame-ui
-description: Trame UI development, Vuetify components, click handlers, refs, state management. Use for Trame widgets, vuetify3, trame-client JS context.
+description: Trame Python-to-web UI patterns. Read BEFORE writing any trame widget code, inline JS event handlers, Vuetify components, state binding, or client-side JavaScript.
 ---
 
 # Trame UI
