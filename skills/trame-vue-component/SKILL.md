@@ -146,7 +146,9 @@ def setup(server, **kwargs):
 
 ## Python Widget Wrapper
 
-Wrap Vue components as Python classes so `enable_module` is called automatically:
+Wrap Vue components as Python classes so `enable_module` is called automatically.
+
+`trame_client.widgets.core.HtmlElement` exists but uses a global `MODULE` class variable that other packages can overwrite. Every Kitware widget library defines a local `HtmlElement` instead:
 
 ```python
 from trame_client.widgets.core import AbstractElement
