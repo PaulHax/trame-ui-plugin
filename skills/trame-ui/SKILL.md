@@ -149,7 +149,18 @@ Then call from event handlers:
 click="var pos = window.myHelper($event.offsetX, $event.offsetY); trigger('on_click', [pos.nx, pos.ny]);"
 ```
 
-**`client.JSEval`** - does NOT auto-execute. Only runs when `.exec()` is called:
+**`client.Script` with ES modules** - use `module=True` for `import` statements:
+```python
+client.Script(
+    "import confetti from 'https://esm.sh/canvas-confetti';"
+    "trame.utils.confetti = confetti;",
+    module=True,
+)
+# Then use in handlers:
+html.Button("Click Me", click="utils.confetti()")
+```
+
+**`client.JSEval`** - does NOT auto-execute. Only runs when `.exec()` is called from the server:
 ```python
 js_call = client.JSEval(exec="window.doStuff()")
 self.ctrl.do_stuff = js_call.exec  # Call this to trigger execution
