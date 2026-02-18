@@ -10,7 +10,7 @@ Claude Code plugin with best practices for [Trame](https://trame.readthedocs.io/
 
 ## Skills
 
-### trame-ui (auto-invoked for all Trame work)
+### trame-ui
 
 General Trame 3 / Vue 3 widget patterns:
 
@@ -24,8 +24,7 @@ General Trame 3 / Vue 3 widget patterns:
 - `raw_attrs` for Vue directives, slot destructuring
 - Slots, `__events`, dynamic bindings
 
-### trame-vanilla-js (invoked on demand)
-
+### trame-vanilla-js 
 Setting up vanilla JavaScript in a Trame app with no build step:
 
 - Trame module system (`serve`, `scripts`, `module_scripts`, `styles`)
@@ -39,8 +38,7 @@ Setting up vanilla JavaScript in a Trame app with no build step:
 - Serial script loading for dependency order
 - VTK view lifecycle hooks (`on_ready`, `before_scene_loaded`, etc.)
 
-### trame-vue-component (invoked on demand)
-
+### trame-vue-component 
 Building Vue.js components for Trame with Vite and npm:
 
 - Directory structure (`vue-components/` → `module/serve/`)
