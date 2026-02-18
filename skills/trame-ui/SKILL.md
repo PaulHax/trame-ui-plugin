@@ -130,6 +130,37 @@ click="if (condition) { trigger('foo', [], {val: $event}); }"
 update_model_value="if (!utils.get('window')._lastCall || Date.now() - utils.get('window')._lastCall > 66) { utils.get('window')._lastCall = Date.now(); trigger('handler', [], {value: $event}); }"
 ```
 
+## Client-Side JavaScript
+
+**`client.Script`** - inject JS that auto-executes on page mount (like `client.Style` for CSS):
+```python
+from trame.widgets import client
+
+with layout:
+    client.Script("""
+        window.myHelper = function(x, y) {
+            const rect = document.getElementById('myEl').getBoundingClientRect();
+            return { nx: x / rect.width, ny: y / rect.height };
+        };
+    """)
+```
+Then call from event handlers:
+```python
+click="var pos = window.myHelper($event.offsetX, $event.offsetY); trigger('on_click', [pos.nx, pos.ny]);"
+```
+
+**`client.JSEval`** - does NOT auto-execute. Only runs when `.exec()` is called:
+```python
+js_call = client.JSEval(exec="window.doStuff()")
+self.ctrl.do_stuff = js_call.exec  # Call this to trigger execution
+
+# WRONG - this registers but never executes:
+client.JSEval(exec="window.myFunc = function() { ... }")  # Dead code!
+
+# CORRECT - use client.Script instead for auto-executing JS
+client.Script("window.myFunc = function() { ... };")
+```
+
 ## raw_attrs
 
 For Vue directives not wrapped by trame:
