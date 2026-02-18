@@ -5,6 +5,11 @@ description: Trame UI development, Vuetify components, click handlers, refs, sta
 
 # Trame UI
 
+## Related Skills
+
+- When setting up a **vanilla JS module with no build step** (IIFE, trame module serving, js_call/trigger), invoke the **trame-vanilla-js** skill.
+- When building a **Vue.js/JS component with Vite/npm** (UMD bundle, npm dependencies), invoke the **trame-vue-component** skill.
+
 ## App Structure (Trame 3 / Vue 3)
 
 ```python
