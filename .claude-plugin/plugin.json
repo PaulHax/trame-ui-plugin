@@ -1,0 +1,9 @@
+{
+  "name": "trame-ui",
+  "description": "Best practices for Trame UI development with Vuetify 3 components, state management, and event handling",
+  "version": "0.1.0",
+  "author": {
+    "name": "paulhax"
+  },
+  "repository": "https://github.com/paulhax/trame-ui-plugin"
+}
