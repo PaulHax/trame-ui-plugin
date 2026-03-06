@@ -25,8 +25,8 @@ class MyApp(TrameApp):
         self._build_ui()
 
     def _build_ui(self):
-        with SinglePageLayout(self.server, full_height=True) as self._ui:
-            with self._ui.content:
+        with SinglePageLayout(self.server, full_height=True) as self.ui:
+            with self.ui.content:
                 pass  # UI here
 ```
 
@@ -137,44 +137,17 @@ update_model_value="if (!utils.get('window')._lastCall || Date.now() - utils.get
 
 ## Client-Side JavaScript
 
-**`client.Script`** - inject JS that auto-executes on page mount (like `client.Style` for CSS):
-```python
-from trame.widgets import client
+For any non-trivial JS, use a **trame module** to serve `.js` files directly instead of inline strings. See the **trame-vanilla-js** skill for the full pattern (IIFE isolation, `trame.utils` namespace, `js_call`/`trigger` communication).
 
-with layout:
-    client.Script("""
-        window.myHelper = function(x, y) {
-            const rect = document.getElementById('myEl').getBoundingClientRect();
-            return { nx: x / rect.width, ny: y / rect.height };
-        };
-    """)
-```
-Then call from event handlers:
+Quick inline module loading for external ESM from CDN:
 ```python
-click="var pos = window.myHelper($event.offsetX, $event.offsetY); trigger('on_click', [pos.nx, pos.ny]);"
-```
-
-**`client.Script` with ES modules** - use `module=True` for `import` statements:
-```python
-client.Script(
-    "import confetti from 'https://esm.sh/canvas-confetti';"
-    "trame.utils.confetti = confetti;",
-    module=True,
-)
-# Then use in handlers:
-html.Button("Click Me", click="utils.confetti()")
+self.server.enable_module({"module_scripts": ["https://esm.sh/canvas-confetti@1.9.3"]})
 ```
 
 **`client.JSEval`** - does NOT auto-execute. Only runs when `.exec()` is called from the server:
 ```python
 js_call = client.JSEval(exec="window.doStuff()")
 self.ctrl.do_stuff = js_call.exec  # Call this to trigger execution
-
-# WRONG - this registers but never executes:
-client.JSEval(exec="window.myFunc = function() { ... }")  # Dead code!
-
-# CORRECT - use client.Script instead for auto-executing JS
-client.Script("window.myFunc = function() { ... };")
 ```
 
 ## raw_attrs
