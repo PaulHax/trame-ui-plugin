@@ -12,8 +12,8 @@ For JS modules that need npm dependencies (vtk.js, maplibre-gl, etc.), use Vite 
 ```
 my_app/
 ├── module/
-│   ├── __init__.py                  # Trame module (lists built UMD files)
-│   ├── serve/                       # Build output (UMD bundles land here)
+│   ├── __init__.py                 # Trame module (lists built UMD files)
+│   ├── serve/                      # Build output (UMD bundles land here)
 │   │   ├── my_component.umd.js     # Built by Vite
 │   │   └── my_component.css        # Built by Vite (if any)
 │   └── vue-components/             # Source (npm project)
@@ -129,15 +129,16 @@ click="utils.my_component.actions.doSomething()"
 
 `module/__init__.py`:
 ```python
+from my_lib import __version__
 from pathlib import Path
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
-serve = {"__my_app": serve_path}
+serve = {f"__my_app_{__version__}": serve_path}
 scripts = [
-    "__my_app/my_component.umd.js",
+    f"__my_app_{__version__}/my_component.umd.js",
 ]
 styles = [
-    "__my_app/my_component.css",
+    f"__my_app_{__version__}/my_component.css",
 ]
 
 def setup(server, **kwargs):

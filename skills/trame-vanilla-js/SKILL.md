@@ -23,11 +23,12 @@ my_feature/
 `module/__init__.py`:
 ```python
 from pathlib import Path
+from your_lib import __version__
 
 serve_path = str(Path(__file__).with_name("serve").resolve())
-serve = {"__my_feature": serve_path}
-scripts = ["__my_feature/my_feature.js"]
-styles = []
+serve = {f"__my_feature_{__version__}": serve_path}
+scripts = [f"__my_feature_{__version__}/my_feature.js"]
+styles = [] # to register css
 
 def setup(server, **kwargs):
     pass
@@ -140,18 +141,18 @@ For larger JS with private state, wrap in an IIFE:
 })();
 ```
 
-## JS → Python Communication (trigger)
+## JS → Python RPC (trigger)
 
 ```javascript
 if (window.trame?.trigger) {
-  window.trame.trigger("my_event", [], { key: "value" });
+  const result = await window.trame.trigger("my_event", [], { key: "value" });
 }
 ```
 
 Python handler:
 ```python
-@self.ctrl.trigger("my_event")
-def _on_my_event(key=None, **kwargs):
+@trigger("my_event")
+def _on_my_event(self, key=None, **kwargs):
     print(f"Got: {key}")
 ```
 
