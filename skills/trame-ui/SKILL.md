@@ -16,7 +16,7 @@ description: Trame Python-to-web UI patterns. Read BEFORE writing any trame widg
 from trame.app import TrameApp
 from trame.decorators import change
 from trame.ui.vuetify3 import SinglePageLayout
-from trame.widgets import vuetify3
+from trame.widgets import vuetify3 as v3
 
 class MyApp(TrameApp):
     def __init__(self, server=None, **kwargs):
@@ -34,12 +34,12 @@ class MyApp(TrameApp):
 
 ```python
 @change("resolution")
-def _on_resolution_change(self, resolution, **kwargs):
+def _on_resolution_change(self, resolution, **_):
     self.cone_source.SetResolution(int(resolution))
     self.ctrl.view_update()
 
 @change("contour_value", "opacity")  # Multiple variables
-def _on_visual_change(self, contour_value, opacity, **kwargs): ...
+def _on_visual_change(self, contour_value, opacity, **_): ...
 ```
 
 ## Controller Pattern
@@ -48,9 +48,16 @@ def _on_visual_change(self, contour_value, opacity, **kwargs): ...
 view = vtk_widgets.VtkLocalView(self.render_window)
 self.ctrl.view_update = view.update
 self.ctrl.view_reset_camera = view.reset_camera
-self.ctrl.on_server_ready.add(self.ctrl.view_update)
 
-vuetify3.VBtn(icon="mdi-crop-free", click=self.ctrl.view_reset_camera)
+v3.VBtn(icon="mdi-crop-free", click=self.ctrl.view_reset_camera)
+```
+
+## Context Pattern
+
+```python
+vtk_widgets.VtkLocalView(self.render_window, ctx_name="view")
+
+v3.VBtn(icon="mdi-crop-free", click=self.ctx.view.reset_camera)
 ```
 
 ## Click Handler Context
@@ -67,37 +74,41 @@ data=utils.safe(obj)  # Strip non-serializable properties
 ## File Input with Custom Button
 
 ```python
-vuetify3.VFileInput(v_model=("file_var", None), ref="fileInput", style="display: none;")
-vuetify3.VBtn(click="trame.refs.fileInput.$el.querySelector('input').click()")
+v3.VFileInput(v_model=("file_var", None), ref="fileInput", style="display: none;")
+v3.VBtn(click="trame.refs.fileInput.$el.querySelector('input').click()")
 ```
 
 ## State Binding
 
 **Two-element tuple** - state with default:
+
 ```python
 v_model=("search_query", "")  # Creates state.search_query
 ```
 
 **Single-element tuple** - reactive expression (no state registration):
+
 ```python
 model_value=("runs[id].value",)  # Note trailing comma
-v_if=("items.length > 0",)
+v_if=("items.length > 0",) # Optional since directive (v_*) are always expressions
 ```
 
 **Controlled binding** - intercept changes:
 ```python
-vuetify3.VSelect(
+v3.VSelect(
     model_value=("runs[id].value",),
-    update_modelValue=(self.ctrl.handler, r"[id, $event]"),
+    update_modelValue=(self.ctrl.handler, "[id, $event]"),
 )
 ```
 
 **flushState** for nested state sync:
+
 ```python
-update_modelValue=f"values[idx] = $event; flushState('values');"
+update_modelValue="values[idx] = $event; flushState('values');"
 ```
 
 **v_model modifiers**:
+
 ```python
 v_model_number=("maxValue", 10)  # v-model.number
 v_model_lazy=("text", "")        # v-model.lazy
@@ -110,15 +121,21 @@ v_model_title=("pageTitle",)     # v-model:title (named, Vue 3)
 ```python
 click=handler                           # No args
 click=(handler, "[a, b]")               # With JS args
+click=(handler, "[a, b]", "{c, d}")     # Call handler with args and kwargs
 click="state_var = 1"                   # Inline JS
 click="trigger('name', [args])"         # Named trigger
 update_modelValue=(handler, "[$event]") # v-model event
 ```
 
 **Register trigger**:
+
 ```python
-@ctrl.trigger("exec_prog")
-def exec_function(*args, **kwargs): ...
+from trame.app import TrameApp
+from trame.decorators import trigger
+
+class App(TrameApp):
+    @trigger("exec_prog")
+    def exec_function(self, *args, **kwargs): ...
 ```
 
 **IIFE patterns don't work** - Immediately Invoked Function Expressions fail silently in event handlers:
@@ -146,8 +163,8 @@ self.server.enable_module({"module_scripts": ["https://esm.sh/canvas-confetti@1.
 
 **`client.JSEval`** - does NOT auto-execute. Only runs when `.exec()` is called from the server:
 ```python
-js_call = client.JSEval(exec="window.doStuff()")
-self.ctrl.do_stuff = js_call.exec  # Call this to trigger execution
+client.JSEval(ctx_name="js_eval", exec="window.doStuff($event)")
+self.ctx.js_eval.exec("hello")  # Trigger execution
 ```
 
 ## raw_attrs
@@ -161,36 +178,42 @@ html.Div(raw_attrs=['v-click-outside="() => { expanded = null }"'])
 
 **Slot destructuring** - quoting is critical:
 ```python
-# CORRECT: double quotes around destructuring
-with vuetify3.Template(
+# CORRECT: double quotes around the right side of the expression
+with v3.Template(
     raw_attrs=['v-slot:header.col="{ column, toggleSort }"'],
 ):
-    html.Div(raw_attrs=["@click='toggleSort(column)'"])
+    html.Div(raw_attrs=['@click="toggleSort(column)"'])
 
 # WRONG: missing quotes generates invalid template
 raw_attrs=["v-slot:header.col={ column }"]  # Bad!
 ```
 
-**Slot-scoped variables** use `raw_attrs`, not tuple syntax:
-```python
-vuetify3.VIcon(raw_attrs=["v-if='getSortIcon(column)'"])  # Correct
-vuetify3.VIcon(v_if="getSortIcon(column)")  # Wrong - expects trame state
-```
-
 ## Slots
 
 ```python
-with vuetify3.VMenu():
-    with vuetify3.Template(v_slot_activator="{ props }"):
-        vuetify3.VBtn(v_bind="props")
-    vuetify3.VList()  # Menu content
+with v3.VMenu():
+    with v3.Template(v_slot_activator="{ props }"):
+        v3.VBtn(v_bind="props")
+    v3.VList()  # Menu content
 ```
+
+## v_on
+
+Expose any event handling
+
+```python
+v3.VSlider(
+    v_on_end=..., # @end=
+    v_on_end_stop=..., # @end.stop=
+)
+```
+
 
 ## __events
 
 Expose non-default Vuetify events:
 ```python
-vuetify3.VSlider(
+v3.VSlider(
     __events=["end"],
     end=(self.on_release, "[$event]"),
 )
@@ -199,7 +222,7 @@ vuetify3.VSlider(
 ## Debug Template
 
 ```python
-with vuetify3.Template(raw_attrs=['v-slot:item="{ item }"']) as t:
+with v3.Template(raw_attrs=['v-slot:item="{ item }"']) as t:
     html.Div("Content")
 print("TEMPLATE:", t)
 ```
